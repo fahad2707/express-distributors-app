@@ -166,7 +166,6 @@ const HeroCanvas: React.FC<HeroCanvasProps> = ({ className }) => {
         dpr={[1, 1.8]}
         gl={{
           antialias: true,
-          physicallyCorrectLights: true,
         }}
       >
         <Suspense fallback={null}>
