@@ -19,7 +19,6 @@ export function SmoothScrollProvider({ children }: SmoothScrollProviderProps) {
     }
 
     const lenis = new Lenis({
-      smooth: true,
       lerp: 0.12,
       wheelMultiplier: 0.9,
       touchMultiplier: 1.1,
