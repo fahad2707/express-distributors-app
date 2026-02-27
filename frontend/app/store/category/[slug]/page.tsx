@@ -64,7 +64,7 @@ export default function CategoryPage() {
     }
     
     addItem({
-      product_id: product.id,
+      product_id: product.id.toString(),
       name: product.name,
       price: product.price,
       image_url: product.image_url,
@@ -104,7 +104,7 @@ export default function CategoryPage() {
           <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
             <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h2 className="text-2xl font-semibold text-gray-900 mb-2">No products found</h2>
-            <p className="text-gray-600 mb-6">This category doesn't have any products yet.</p>
+            <p className="text-gray-600 mb-6">This category doesn&apos;t have any products yet.</p>
             <Link
               href="/"
               className="inline-flex items-center gap-2 bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-700 transition-colors"

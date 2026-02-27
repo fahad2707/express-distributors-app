@@ -233,7 +233,7 @@ export default function SearchBar({ onProductSelect, variant = 'default' }: Sear
                 }}
                 className="w-full text-center text-sm font-semibold text-slate-100 hover:text-white transition-colors"
               >
-                View all results for "{query}"
+                View all results for &quot;{query}&quot;
               </button>
             </div>
           </div>

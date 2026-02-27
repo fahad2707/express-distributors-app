@@ -103,7 +103,7 @@ export default function CheckoutForm({ items, total, onSuccess, onCancel }: Chec
           </div>
           <h2 className="text-3xl font-bold text-gray-900 mb-2">Order Placed Successfully!</h2>
           <p className="text-gray-600 text-lg">
-            Your order is being processed. You'll receive a confirmation shortly.
+            Your order is being processed. You&apos;ll receive a confirmation shortly.
           </p>
         </div>
         <div className="bg-gray-50 rounded-xl p-6 mb-6">
