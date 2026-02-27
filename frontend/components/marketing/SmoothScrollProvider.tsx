@@ -51,10 +51,6 @@ export function SmoothScrollProvider({ children }: SmoothScrollProviderProps) {
       },
     });
 
-    ScrollTrigger.defaults({
-      ease: "power3.out",
-    });
-
     return () => {
       lenis.destroy();
       ScrollTrigger.killAll();
