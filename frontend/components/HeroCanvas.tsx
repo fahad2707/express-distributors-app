@@ -65,14 +65,12 @@ function Scene({ isMobile }: { isMobile: boolean }) {
 
       {/* Postprocessing kept subtle, reduced on mobile */}
       <EffectComposer>
-        {!isMobile && (
-          <Bloom
-            intensity={0.3}
-            luminanceThreshold={0.2}
-            luminanceSmoothing={0.6}
-            radius={0.7}
-          />
-        )}
+        <Bloom
+          intensity={isMobile ? 0.15 : 0.3}
+          luminanceThreshold={0.2}
+          luminanceSmoothing={0.6}
+          radius={0.7}
+        />
         <ChromaticAberration
           blendFunction={BlendFunction.NORMAL}
           offset={isMobile ? [0.0005, 0.0005] : [0.0015, 0.0015]}
