@@ -1,0 +1,298 @@
+'use client';
+
+import { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft, Image as ImageIcon, Loader2 } from 'lucide-react';
+import adminApi, { uploadApi } from '@/lib/admin-api';
+import toast from 'react-hot-toast';
+
+interface Category {
+  id: string | number;
+  name: string;
+}
+
+interface SubCategory {
+  id: string | number;
+  name: string;
+  category_id: string;
+}
+
+export default function NewProductPage() {
+  const router = useRouter();
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [subCategories, setSubCategories] = useState<SubCategory[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [form, setForm] = useState({
+    name: '',
+    item_id: '',
+    description: '',
+    image_url: '',
+    selling_price: '',
+    cost_price: '',
+    category_id: '',
+    sub_category_id: '',
+    barcode: '',
+    stock_quantity: '0',
+    low_stock_threshold: '10',
+  });
+
+  useEffect(() => {
+    adminApi.get('/categories').then((r) => setCategories(r.data || [])).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (form.category_id) {
+      adminApi.get(`/sub-categories?category_id=${form.category_id}`).then((r) => setSubCategories(r.data || [])).catch(() => setSubCategories([]));
+      setForm((f) => ({ ...f, sub_category_id: '' }));
+    } else {
+      setSubCategories([]);
+    }
+  }, [form.category_id]);
+
+  const handleImageUpload = async (file: File) => {
+    if (!file?.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be under 5MB');
+      return;
+    }
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('image', file);
+      const { data } = await uploadApi.post<{ url: string }>('/upload/image', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setForm((f) => ({ ...f, image_url: data.url }));
+      setImagePreview(data.url);
+      toast.success('Image uploaded');
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Upload failed');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.name.trim()) {
+      toast.error('Product name is required');
+      return;
+    }
+    const selling = parseFloat(form.selling_price);
+    if (isNaN(selling) || selling < 0) {
+      toast.error('Enter a valid selling price');
+      return;
+    }
+    setLoading(true);
+    try {
+      await adminApi.post('/products', {
+        name: form.name.trim(),
+        description: form.description || undefined,
+        sku: form.item_id.trim() || undefined,
+        image_url: form.image_url || undefined,
+        price: selling,
+        cost_price: form.cost_price !== '' ? parseFloat(form.cost_price) : undefined,
+        category_id: form.category_id || undefined,
+        sub_category_id: form.sub_category_id || undefined,
+        barcode: form.barcode.trim() || undefined,
+        stock_quantity: parseInt(form.stock_quantity, 10) || 0,
+        low_stock_threshold: parseInt(form.low_stock_threshold, 10) || 10,
+      });
+      toast.success('Product added. It will appear on the website in the selected category.');
+      router.push('/admin/products');
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to add product');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="max-w-2xl mx-auto">
+      <Link href="/admin/products" className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6">
+        <ArrowLeft className="w-4 h-4" />
+        Back to Products
+      </Link>
+      <h1 className="text-2xl font-bold text-gray-900 mb-2">Add New Product</h1>
+      <p className="text-gray-600 mb-6">
+        Product will appear on the website in the chosen category. Item ID and cost price are for admin only and are not shown to customers.
+      </p>
+
+      <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow border border-gray-200 p-6 space-y-5">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Product name *</label>
+          <input
+            type="text"
+            value={form.name}
+            onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Item ID (admin only, not shown on website)</label>
+          <input
+            type="text"
+            value={form.item_id}
+            onChange={(e) => setForm((f) => ({ ...f, item_id: e.target.value }))}
+            placeholder="Optional – leave blank to auto-generate"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+          <textarea
+            value={form.description}
+            onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+            rows={3}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Product image (drag & drop or click)</label>
+          <div
+            onDrop={(e) => {
+              e.preventDefault();
+              const f = e.dataTransfer.files[0];
+              if (f) handleImageUpload(f);
+            }}
+            onDragOver={(e) => e.preventDefault()}
+            onClick={() => fileInputRef.current?.click()}
+            className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-[#0f766e] cursor-pointer transition-colors"
+          >
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); }} />
+            {uploading ? (
+              <div className="flex flex-col items-center gap-2">
+                <Loader2 className="w-10 h-10 text-[#0f766e] animate-spin" />
+                <p className="text-sm text-gray-600">Uploading...</p>
+              </div>
+            ) : imagePreview ? (
+              <div className="space-y-2">
+                <img src={imagePreview} alt="Preview" className="max-w-full max-h-48 mx-auto rounded-lg object-cover" />
+                <p className="text-sm text-gray-500">Click or drag to change</p>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center gap-2">
+                <ImageIcon className="w-12 h-12 text-gray-400" />
+                <p className="text-sm text-gray-600">Drag and drop an image here, or click to choose</p>
+                <p className="text-xs text-gray-500">PNG, JPG, GIF up to 5MB</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Selling price (USD) *</label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={form.selling_price}
+              onChange={(e) => setForm((f) => ({ ...f, selling_price: e.target.value }))}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Cost price (admin only, not on website)</label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={form.cost_price}
+              onChange={(e) => setForm((f) => ({ ...f, cost_price: e.target.value }))}
+              placeholder="Optional"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Category (product appears here on website)</label>
+          <select
+            value={form.category_id}
+            onChange={(e) => setForm((f) => ({ ...f, category_id: e.target.value }))}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2"
+          >
+            <option value="">Select category</option>
+            {categories.map((c) => (
+              <option key={c.id} value={String(c.id)}>{c.name}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Subcategory (product appears here on website)</label>
+          <select
+            value={form.sub_category_id}
+            onChange={(e) => setForm((f) => ({ ...f, sub_category_id: e.target.value }))}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2"
+            disabled={!form.category_id}
+          >
+            <option value="">Select subcategory</option>
+            {subCategories.map((s) => (
+              <option key={s.id} value={String(s.id)}>{s.name}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Barcode (for Billing / scanning)</label>
+          <input
+            type="text"
+            value={form.barcode}
+            onChange={(e) => setForm((f) => ({ ...f, barcode: e.target.value }))}
+            placeholder="Optional"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2"
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Stock quantity</label>
+            <input
+              type="number"
+              min="0"
+              value={form.stock_quantity}
+              onChange={(e) => setForm((f) => ({ ...f, stock_quantity: e.target.value }))}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Low stock threshold</label>
+            <input
+              type="number"
+              min="0"
+              value={form.low_stock_threshold}
+              onChange={(e) => setForm((f) => ({ ...f, low_stock_threshold: e.target.value }))}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2"
+            />
+          </div>
+        </div>
+
+        <div className="flex gap-3 pt-4">
+          <button
+            type="submit"
+            disabled={loading}
+            className="px-6 py-2 rounded-lg text-white font-medium bg-[#0f766e] hover:bg-[#0d5d57] disabled:opacity-50"
+          >
+            {loading ? 'Saving...' : 'Add Product'}
+          </button>
+          <Link href="/admin/products" className="px-6 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">
+            Cancel
+          </Link>
+        </div>
+      </form>
+    </div>
+  );
+}

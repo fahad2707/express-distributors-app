@@ -1,0 +1,6 @@
+name,slug,description,price,cost_price,category_slug,image_url,barcode,plu,sku,stock_quantity,low_stock_threshold,tax_rate,is_active
+Mint Gum 10pk,mint-gum-10pk,,2.99,0.00,candy-gum,,066644638590,,EDI-0001,0,5,0,1
+Bubble Gum 5pk,bubble-gum-5pk,,1.49,0.00,candy-gum,,538570746914,,EDI-0002,0,5,0,1
+Cola 12oz 6pk,cola-12oz-6pk,,4.99,0.00,beverages-soda,,136855910210,,EDI-0003,0,5,0,1
+Lemon Soda 12oz 6pk,lemon-soda-12oz-6pk,,3.99,0.00,beverages-soda,,430720459478,,EDI-0004,0,5,0,1
+Sea Salt Chips 8oz,sea-salt-chips-8oz,,2.49,0.00,snacks-chips,,156102517439,,EDI-0005,0,5,0,1
