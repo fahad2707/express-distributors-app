@@ -33,7 +33,7 @@ router.get('/generate-number', authenticateAdmin, (req, res) => {
 // Process recurring expenses (call from cron/scheduler; admin only)
 router.post('/process-recurring', authenticateAdmin, async (req: AuthRequest, res) => {
   try {
-    const result = await processRecurringExpenses(req.userId);
+    const result = await processRecurringExpenses(req.userId ? new mongoose.Types.ObjectId(req.userId) : undefined);
     res.json({ message: `${result.created} recurring expense(s) created`, created: result.created });
   } catch (e) {
     console.error('Process recurring:', e);
@@ -170,7 +170,7 @@ router.post('/', authenticateAdmin, async (req: AuthRequest, res) => {
       expense.payment_mode,
       expense.description || `Expense ${expense.expense_number}`,
       expense.date,
-      req.userId
+      req.userId ? new mongoose.Types.ObjectId(req.userId) : undefined
     );
     if (req.userId) {
       await AuditLog.create({

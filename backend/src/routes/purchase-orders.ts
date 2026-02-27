@@ -1,4 +1,5 @@
 import express from 'express';
+import mongoose from 'mongoose';
 import PurchaseOrder from '../models/PurchaseOrder';
 import Product from '../models/Product';
 import StockMovement from '../models/StockMovement';
@@ -174,7 +175,7 @@ router.put('/:id', authenticateAdmin, async (req: AuthRequest, res) => {
     const data = schema.parse(req.body);
     if (data.items) {
       const items = data.items.map((item) => ({
-        product_id: item.product_id,
+        product_id: new mongoose.Types.ObjectId(item.product_id),
         product_name: item.product_name,
         quantity_ordered: item.quantity_ordered,
         quantity_received: 0,
@@ -254,7 +255,7 @@ router.post('/:id/receive', authenticateAdmin, async (req: AuthRequest, res) => 
           { account_type: 'VENDOR', debit: po.total_amount, credit: 0, reference_type: LedgerReferenceType.PURCHASE_ORDER, reference_id: po._id, description: `PO ${po.po_number} received` },
           { account_type: 'PURCHASE', debit: 0, credit: po.total_amount, reference_type: LedgerReferenceType.PURCHASE_ORDER, reference_id: po._id, description: `PO ${po.po_number}` },
         ],
-        req.userId
+        req.userId ? new mongoose.Types.ObjectId(req.userId) : undefined
       );
     }
 

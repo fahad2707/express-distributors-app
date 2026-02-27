@@ -15,7 +15,7 @@ router.get('/', authenticateAdmin, async (req: AuthRequest, res) => {
         currency: 'USD',
         default_tax_rate: 0,
       });
-      settings = created.toObject();
+      settings = created.toObject() as NonNullable<typeof settings>;
     }
     const s = settings as any;
     res.json({

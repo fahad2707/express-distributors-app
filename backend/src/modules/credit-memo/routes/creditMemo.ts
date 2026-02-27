@@ -1,4 +1,5 @@
 import express from 'express';
+import mongoose from 'mongoose';
 import { z } from 'zod';
 import CreditMemo from '../models/CreditMemo';
 import { authenticateAdmin, AuthRequest } from '../../../middleware/auth';
@@ -203,7 +204,7 @@ router.put('/:id', authenticateAdmin, async (req: AuthRequest, res) => {
         const taxAmount = (i.quantity * i.unit_price * (i.tax_percent || 0)) / 100;
         const total = i.quantity * i.unit_price + taxAmount;
         return {
-          product_id: new (mongoose as any).Types.ObjectId(i.product_id),
+          product_id: new mongoose.Types.ObjectId(i.product_id),
           product_name: i.product_name,
           quantity: i.quantity,
           unit_price: i.unit_price,
