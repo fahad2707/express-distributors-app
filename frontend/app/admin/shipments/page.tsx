@@ -45,7 +45,7 @@ export default function ShipmentsPage() {
     fetchList();
   }, [typeFilter, statusFilter]);
 
-  const formatDate = (d: string) => {
+  const formatDate = (d?: string) => {
     if (!d) return '—';
     return new Date(d).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
   };
